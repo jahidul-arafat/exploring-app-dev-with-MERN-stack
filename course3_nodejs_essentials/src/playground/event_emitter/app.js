@@ -1,8 +1,8 @@
 // EventEmitter to allow Pib-Sub architecture to ensure asynchrony
-const eventModule= require("events"); // import the event module
+const {EventEmitter}= require("events").EventEmitter; // import the event module
 
 // create a new emitter using the eventModule
-let emitter= new eventModule.EventEmitter();
+let emitter= new EventEmitter();
 
 // create a custom event that will be triggered when the emitter is on
 emitter.on("customEvent",(message,user)=>{

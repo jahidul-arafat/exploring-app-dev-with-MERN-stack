@@ -1,0 +1,48 @@
+// file stream example
+const fsModule = require("fs");
+
+filesToRead = "./chat-logs/sample.log";
+
+// exit if the file doesn't exist
+if (!fsModule.existsSync(filesToRead)) {
+
+}
+
+// Approach-01: If reading small files (i.e. files with less strings)
+// async reading the file contents ands streaming to terminal
+// fsModule.readFile(
+//     filesToRead,
+//     "UTF-8",
+//     (err, fileContents) => {
+//         if (err) throw err;
+//         process.stdout.write(fileContents);
+//         process.stdout.write(`\nFile Read ${fileContents.length}`)
+//     })
+
+// Approach-02: If reading large file
+// use stream approach using createReadStream() async, non-blocking
+let streamOfFileContentChunks = fsModule.createReadStream(
+    filesToRead,
+    "UTF-8"
+);
+
+// once all the chunks are read
+// a "data" event trigger
+streamOfFileContentChunks.once("data", (dataChunk) => {
+    console.log("Read stream started");
+    console.log("==========");
+    console.log(dataChunk);
+});
+
+let overallData = "";
+
+streamOfFileContentChunks.on("data", (dataChunk) => {
+    console.log(`Chunk: ${dataChunk.length}`);
+    overallData += dataChunk;
+})
+
+streamOfFileContentChunks.on("end", () => {
+    console.log(`Finished: ${overallData.length}`);
+});
+
+console.log("Reading the file...");

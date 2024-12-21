@@ -53,7 +53,7 @@ ask();
 // event driven - only when a 'data' event
 // let the user answer this question
 // listen for a data event ,
-// 'data' -> is the event name, noy the variable name;
+// 'data' -> is the event name, not the variable name;
 // input -> parameter name for the callback function which will be emitted when the data event is triggered
 process.stdin.on("data", (input) => {
     // process.stdout.write(data.toString().trim());
