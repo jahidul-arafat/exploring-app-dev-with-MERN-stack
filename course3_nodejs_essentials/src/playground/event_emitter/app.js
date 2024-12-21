@@ -21,7 +21,7 @@ function promptUser(){
 promptUser();
 
 // Handle user input
-// now if n "data" event occurs, i.e. user write something in terminal, then the emitter will emit
+// now if a "data" event occurs, i.e. user write something in terminal, then the emitter will emit
 process.stdin.on("data",(inputData)=>{
     const input=inputData.toString().trim();
     // if user typed "exit"
