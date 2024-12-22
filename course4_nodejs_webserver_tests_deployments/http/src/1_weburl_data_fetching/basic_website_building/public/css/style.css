@@ -1,0 +1,11 @@
+body{
+    background-color: #f4bf92;
+    color: blue;
+    font-family: verdana, serif;
+}
+
+img{
+    border: solid 2px white;
+    padding: 2px;
+    width: 300px;
+}
