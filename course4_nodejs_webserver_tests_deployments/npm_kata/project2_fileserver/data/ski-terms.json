@@ -1,0 +1,14 @@
+[
+  {
+    "term": "huck",
+    "defined": "simple huck definition"
+  },
+  {
+    "term": "rip",
+    "defined": "simple rip definition"
+  },
+  {
+    "term": "newTerm",
+    "defined": "New definition"
+  }
+]
