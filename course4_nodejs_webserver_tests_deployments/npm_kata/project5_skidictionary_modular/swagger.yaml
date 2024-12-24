@@ -1,0 +1,147 @@
+openapi: 3.0.0
+info:
+  title: Ski Dictionary API
+  description: API for managing a dictionary of ski terms
+  version: 1.0.0
+
+servers:
+  - url: http://localhost:3000
+    description: Local development server
+
+paths:
+  /dictionary:
+    get:
+      summary: Get all ski terms
+      description: Retrieves the entire list of ski terms and their definitions
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/SkiTerm'
+
+    post:
+      summary: Add a new ski term
+      description: Adds a new ski term and its definition to the dictionary
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SkiTerm'
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: success
+                  term:
+                    $ref: '#/components/schemas/SkiTerm'
+
+  /dictionary/{term}:
+    put:
+      summary: Update a ski term
+      description: Updates the definition of an existing ski term
+      parameters:
+        - in: path
+          name: term
+          required: true
+          schema:
+            type: string
+          description: The ski term to update
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                defined:
+                  type: string
+                  example: Updated definition of the ski term
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: success
+                  updated:
+                    $ref: '#/components/schemas/SkiTerm'
+        '404':
+          description: Term not found
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: error
+                  message:
+                    type: string
+
+    delete:
+      summary: Delete a ski term
+      description: Removes a ski term from the dictionary
+      parameters:
+        - in: path
+          name: term
+          required: true
+          schema:
+            type: string
+          description: The ski term to delete
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: success
+                  removed:
+                    type: string
+                  newLength:
+                    type: integer
+        '404':
+          description: Term not found
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: error
+                  message:
+                    type: string
+
+components:
+  schemas:
+    SkiTerm:
+      type: object
+      required:
+        - term
+        - defined
+      properties:
+        term:
+          type: string
+          example: Powder
+        defined:
+          type: string
+          example: Light, fluffy snow that's fun to ski on
