@@ -1,0 +1,19 @@
+{
+  "name": "project4_websocket_basic",
+  "version": "1.0.0",
+  "main": "server-socketio.js",
+  "type": "module",
+  "scripts": {
+    "start": "node server-socketio.js"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "description": "",
+  "dependencies": {
+    "express": "^4.21.2",
+    "socket.io": "^4.8.1",
+    "uuid": "^11.0.3",
+    "ws": "^8.18.0"
+  }
+}
