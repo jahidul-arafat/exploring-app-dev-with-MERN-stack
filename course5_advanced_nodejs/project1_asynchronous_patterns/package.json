@@ -1,0 +1,16 @@
+{
+  "name": "project1_asynchronous_patterns",
+  "version": "1.0.0",
+  "main": "src/simple_callback.js",
+  "type": "module",
+  "scripts": {
+    "start": "node src/simple_callback.js"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "description": "",
+  "dependencies": {
+    "log-update": "^6.1.0"
+  }
+}
