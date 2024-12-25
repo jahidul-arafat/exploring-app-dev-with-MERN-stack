@@ -1,12 +1,15 @@
 openapi: 3.0.0
 info:
-  title: Ski Dictionary API
-  description: API for managing a dictionary of ski terms
+  title: Ski Dictionary API ( A Sample App Designed for DevOps Application Deployment Testing)
+  description: API for managing a dictionary of ski terms designed By Jahidul Arafat, https://www.linkedin.com/in/jahidul-arafat-presidential-fellow-phd-student-791a7490/
   version: 1.0.0
 
 servers:
   - url: http://localhost:3000
-    description: Local development server
+    description: Oracle Cloud Infrastructure (OCI) Server
+
+security:
+  - basicAuth: []
 
 paths:
   /dictionary:
@@ -85,13 +88,7 @@ paths:
           content:
             application/json:
               schema:
-                type: object
-                properties:
-                  status:
-                    type: string
-                    example: error
-                  message:
-                    type: string
+                $ref: '#/components/schemas/Error'
 
     delete:
       summary: Delete a ski term
@@ -123,15 +120,124 @@ paths:
           content:
             application/json:
               schema:
+                $ref: '#/components/schemas/Error'
+
+  /dictionary/search:
+    get:
+      summary: Search dictionary terms
+      description: Search for terms or definitions containing a specific string
+      parameters:
+        - in: query
+          name: q
+          required: true
+          schema:
+            type: string
+          description: The search query
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/SkiTerm'
+
+  /dictionary/random:
+    get:
+      summary: Get a random term
+      description: Returns a random term from the dictionary
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SkiTerm'
+
+  /dictionary/terms:
+    get:
+      summary: Get multiple terms
+      description: Fetches multiple specific terms in a single request
+      parameters:
+        - in: query
+          name: ids
+          required: true
+          schema:
+            type: string
+          description: Comma-separated list of term IDs
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/SkiTerm'
+
+  /dictionary/bulk:
+    post:
+      summary: Add multiple terms
+      description: Adds multiple ski terms and their definitions to the dictionary
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: array
+              items:
+                $ref: '#/components/schemas/SkiTerm'
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
                 type: object
                 properties:
                   status:
                     type: string
-                    example: error
-                  message:
+                    example: success
+                  addedTerms:
+                    type: integer
+                  terms:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/SkiTerm'
+        '500':
+          description: Server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /dictionary/stats:
+    get:
+      summary: Get dictionary statistics
+      description: Provides various statistics about the dictionary
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  totalTerms:
+                    type: integer
+                  averageDefinitionLength:
+                    type: number
+                  longestTerm:
+                    type: string
+                  shortestTerm:
                     type: string
 
 components:
+  securitySchemes:
+    basicAuth:
+      type: http
+      scheme: basic
   schemas:
     SkiTerm:
       type: object
@@ -145,3 +251,12 @@ components:
         defined:
           type: string
           example: Light, fluffy snow that's fun to ski on
+
+    Error:
+      type: object
+      properties:
+        status:
+          type: string
+          example: error
+        message:
+          type: string

@@ -53,6 +53,8 @@ export const logger = (req, res, next) => {
 // };
 
 // Updated save() function
+// Why used return after default and else blocks?
+// Answer: These return statements are a good practice in Promise-based functions, especially when dealing with error conditions, as they help maintain clear and predictable control flow in your asynchronous operations.
 export const save = (termOrTerms, definition = null, isNew = false, operation = "update") => {
     return new Promise((resolve, reject) => {
         const filePath = path.join(__dirname, '..', 'data', 'ski-terms.json');
@@ -89,8 +91,9 @@ export const save = (termOrTerms, definition = null, isNew = false, operation = 
                         skiTermDB[updateIndex].defined = definition;
                         message = `Ski-term "${termOrTerms}" updated successfully`;
                     } else {
-                        reject(new Error(`Term ${termOrTerms} not found for update`));
-                        return;
+                        console.log(`Term "${termOrTerms}" not found for update`);
+                        reject(new Error(`Term "${termOrTerms}" not found for update`));
+                        return; // Maintain promise chain integrity: In a Promise-based function, it's important to ensure that you don't accidentally resolve after rejecting, or vice versa. The return statement helps prevent this.
                     }
                 }
                 break;
@@ -98,14 +101,16 @@ export const save = (termOrTerms, definition = null, isNew = false, operation = 
                 const initialLength = skiTermDB.length;
                 skiTermDB = skiTermDB.filter(item => item.term !== termOrTerms); // get the skiTermDB excluding the item marked to delete
                 if (initialLength === skiTermDB.length) { // if still both length remains same, means, nothing to delete
+                    console.log(`Term "${termOrTerms}" not found for deletion`);
                     reject(new Error(`Term "${termOrTerms}" not found for deletion`));
                     return;
                 }
                 message = `Ski-term "${termOrTerms}" deleted successfully`;
                 break;
             default:
+                console.log(`Invalid operation: ${operation}`);
                 reject(new Error(`Invalid operation: ${operation}`));
-                return;
+                return; // This ensures that an invalid operation immediately stops the function and rejects the promise.
         }
 
         // Write updated skiTermDB back to file
