@@ -2,7 +2,7 @@
 // handling useEffect hook could be tricky
 import {useReducer, useEffect} from "react"; // use {} for named imports in JavaScript i.e. functions, objects, values that are exported by name from a module
 import './App.css'
-import image1 from "./images/image1.jpeg"
+import image1 from "./images/image2.jpeg"
 
 // create some variables what we gonna pass int he JSX
 let language = "React JavaScript  ";
@@ -106,7 +106,7 @@ function App() {
     // Option-01: make sure to call the useEffect when the app is first render, for subsequent calls, it will not be called
     // Option-02: make sure to call the useEffect whenever a certain value changes i.e. changes in the 'status'
     useEffect(()=>{
-        console.log(`The restaurant is ${status?"Open":"Closed"}`)
+        console.log(`[useEffect] The restaurant is ${status?"Open":"Closed"}`)
     },[status]);
 
     return (
@@ -121,7 +121,7 @@ function App() {
 
             <Header name="Ally" school="AU/CSSE" year={new Date().getFullYear()}/>
             {/*<PrintNumber numList={items}/>*/}
-            <ImageRender image={image1} title={"Photo of a Similing Student"}/>
+            <ImageRender image={image1} title={"Photo of a Smiling Student"}/>
             <Dish dishObjs={dishObjects}/>
         </>
     );
