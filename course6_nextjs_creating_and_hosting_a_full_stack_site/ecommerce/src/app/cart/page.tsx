@@ -5,6 +5,8 @@ import {useEffect, useState} from "react";
 import { Product, products } from "@/app/data/product-data";
 import Link from "next/link";
 import Image from "next/image";
+import {useRouter} from "next/navigation";
+import {fetchAllProducts} from "@/app/utils/utils";
 
 const renderCartItems = (cartProducts: Product[], onDelete:(id:string)=>void) => {
     return cartProducts.map((product,index) => (
@@ -74,18 +76,54 @@ const renderCart = (cartProducts: Product[], totalPrice: number, deleteProduct: 
 export default function CartPage() {
     //const [cartProductIDs] = useState<string[]>(["111","100", "123", "345", "999"]);
     const [cartProducts, setCartProducts] = useState<Product[]>([]);
+    const [allProducts, setAllProducts] = useState<Product[]>([]);
+    const router=useRouter(); // its a hook
 
-    // will be executed only firs time
+    // Function to clear cart and redirect to /products
+    const clearCartAndRedirect = () => {
+        console.log("Clearing cart and redirecting to the /products page");
+        localStorage.removeItem('cart');
+        setCartProducts([]);
+        router.push("/products");
+    };
+
+
+    // useRouter() hook to redirect the user to the /products page if there are no items in the cart
+
     useEffect(() => {
-        // get the cart items from broswer's local storage
-        const cartItems=JSON.parse(localStorage.getItem('cart')||'[]');
+        const fetchProductsAndUpdateCart = async () => {
+            try {
+                // Fetch all products, including newly added ones
+                const fetchedProducts = await fetchAllProducts();
+                setAllProducts(fetchedProducts);
 
-        // find the corresponding products in the original product list
-        const validCartProducts = cartItems.filter((item: Product) =>
-            products.some(p => p.id === item.id)
-        );
-        setCartProducts(validCartProducts);
-    },[]); // useEffect() hook in this component will execute only once when the component mounts.
+                // Get cart items from local storage
+                const cartItems = JSON.parse(localStorage.getItem('cart') || '[]');
+
+                // Find corresponding products in the fetched product list
+                const validCartProducts: Product[] = cartItems.filter((item: Product) =>
+                    fetchedProducts.some(p => p.id === item.id)
+                );
+
+                setCartProducts(validCartProducts);
+
+                // If the cart is empty, redirect to the product page
+                if (validCartProducts.length === 0) {
+                    console.log("No valid items found in the cart. Redirecting to the /products page");
+                    clearCartAndRedirect();
+                }
+            } catch (error) {
+                console.error("Error fetching products:", error);
+                clearCartAndRedirect();
+            }
+        };
+
+        fetchProductsAndUpdateCart().catch((error)=>{
+            console.error("Error fetching products and updating cart:", error);
+            clearCartAndRedirect(); // redirect to /products page in case of any error while fetching products
+        });
+    }, [router]); // useEffect() hook in this component will execute only once when the component mounts.
+    // what woudl happen if we dont use 'router' in the dependency array?
 
     // Delete a product from cart
     const deleteProduct=(id:string)=>{
@@ -96,6 +134,13 @@ export default function CartPage() {
             updateCart.splice(indexToRemove,1); // removes the single item at index found
             setCartProducts(updateCart);
             localStorage.setItem('cart',JSON.stringify(cartProducts));
+
+            // if the cart becomes empty after deletion, redirect to teh products page
+            if (updateCart.length===0){
+                console.log("Cart becomes empty after item deletions. Redirecting to the /products page");
+                // Clear the cart in localStorage and redirect to /pages
+                clearCartAndRedirect();
+            }
 
         }
     };

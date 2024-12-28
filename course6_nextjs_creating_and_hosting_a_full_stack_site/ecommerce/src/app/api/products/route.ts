@@ -3,60 +3,120 @@ import {Product, products} from "@/app/data/product-data";
 // This will not send back to cleint any react component, instead data just like API
 // thats why we named it route.ts, not route.tsx
 
+/*
+Note:
+1. In-Memory Storage:
+The products array imported from /data/products-data is being used as in-memory storage. When the server is running, any modifications (additions, deletions, updates) to this array are kept in the server's memory.
+2. POST Method:
+When you add new products using the POST method, these products are pushed into the products array in memory. The line products.push(newProduct); is adding the new product to this in-memory array.
+3. GET Method:
+When you make a GET request, you're retrieving the current state of the products array from memory, which includes both the original products and any new ones added via POST requests.
+4. Persistence Issue:
+The /data/products-data file itself is not being updated. This means that when you restart the server, all the changes made during the server's runtime (including new products added via POST) will be lost, and you'll start again with the original data from the file.
+5. Temporary Nature:
+This behavior is typical for development environments or when working with in-memory data stores. It allows for quick testing and development without constantly writing to files or databases.
+ */
+
 // GET request, return a Response()
-export async function GET() {
+// http://localhost:3000/api/products (all products)
+// http://localhost:3000/api/products?id=<product_id> (single product)
+export async function GET(request: Request) {
     try {
-        // return the products data as JSON
-        return new Response(
-            JSON.stringify(products),
-            {
-                headers: {'Content-Type': 'application/json'},
-                status: 200,
-            });
+        const url = new URL(request.url);
+        const id = url.searchParams.get('id');
+
+        if (id) {
+            // Search for a specific product
+            const product = products.find(p => p.id === id);
+            if (product) {
+                return new Response(
+                    JSON.stringify(product),
+                    {
+                        headers: {'Content-Type': 'application/json'},
+                        status: 200,
+                    }
+                );
+            } else {
+                return new Response(
+                    JSON.stringify({error: 'Product not found'}),
+                    {
+                        headers: {'Content-Type': 'application/json'},
+                        status: 404,
+                    }
+                );
+            }
+        } else {
+            // Return all products
+            return new Response(
+                JSON.stringify(products),
+                {
+                    headers: {'Content-Type': 'application/json'},
+                    status: 200,
+                }
+            );
+        }
     } catch (error) {
         console.error("Error fetching products: ", error);
         return new Response(
             JSON.stringify({error: 'Internal Server Error'}),
             {
                 headers: {'Content-Type': 'application/json'},
-                status: 400,
-            });
+                status: 500,
+            }
+        );
     }
-
-
-    //the frontend will make a GET request to load the products or products in user shopping cart
-    // return what server wants to send back to client
-    //return new Response('Hello from Next.js route handler!!');
 }
 
+// POST method to handle both single product and bulk product additions, while also checking for existing product IDs.
 export async function POST(request: Request) {
     try {
-        // parse the request body
-        const newProduct: Product = await request.json();
+        // Parse the request body
+        const body = await request.json();
 
-        // validate the new product
-        if (!newProduct.id || !newProduct.name || !newProduct.imageUrl || !newProduct.description || !newProduct.price) {
-            return new Response(
-                JSON.stringify({error: 'Invalid Product Data'}),
-                {
-                    headers: {'Content-Type': 'application/json'},
-                    status: 400,
-                });
+        // Check if it's a single product or an array of products
+        const newProducts = Array.isArray(body) ? body : [body];
+
+        const addedProducts: Product[] = [];
+        const skippedProducts: { id: string, reason: string }[] = [];
+
+        for (const newProduct of newProducts) {
+            // Validate the new product
+            if (!newProduct.id || !newProduct.name || !newProduct.imageUrl || !newProduct.description || !newProduct.price) {
+                skippedProducts.push({ id: newProduct.id || 'unknown', reason: 'Invalid product data' });
+                console.log(`Invalid product data: ${JSON.stringify(newProduct)}`);
+                continue;
+            }
+
+            // Check if product with the same ID already exists
+            if (products.some(p => p.id === newProduct.id)) {
+                skippedProducts.push({ id: newProduct.id, reason: 'Product with this ID already exists' });
+                console.log(`Product with ID ${newProduct.id} already exists`);
+                continue;
+            }
+
+            // Add the new product
+            console.log("Adding new product: ${newProduct.name} (ID: ${newProduct.id})");
+            products.push(newProduct);
+            addedProducts.push(newProduct);
         }
 
-        // if newProduct is OK, then add this to the products array
-        products.push(newProduct);
+        // Prepare the response
+        const response = {
+            addedProducts,
+            skippedProducts,
+            message: `Added ${addedProducts.length} product(s), skipped ${skippedProducts.length} product(s).`
+        };
 
-        // return the newly added product
+        // Return the response
         return new Response(
-            JSON.stringify(newProduct),
+            JSON.stringify(response),
             {
                 headers: {'Content-Type': 'application/json'},
                 status: 201,
             }
         );
     } catch (error) {
-        console.error("Error adding new product: ", error);
+        console.error("Error adding new product(s): ", error);
         return new Response(
             JSON.stringify({error: 'Internal Server Error'}),
             {
@@ -64,9 +124,7 @@ export async function POST(request: Request) {
                 status: 500,
             });
     }
-
 }
-
 
 // DELETE request, return a Response()
 // http://localhost:3000/api/products?id=<product_id>
@@ -195,8 +253,4 @@ export async function PUT(request: Request) {
         );
     }
 }
-
-
-
-
 

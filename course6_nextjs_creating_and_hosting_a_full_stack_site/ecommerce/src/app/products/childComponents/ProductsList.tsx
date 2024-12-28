@@ -1,6 +1,9 @@
+"use client"
+
 import Image from "next/image";
 import Link from "next/link";
-import {Product} from "@/app/data/product-data"; // importing the interface Product{}
+import {Product} from "@/app/data/product-data";
+import {useState} from "react"; // importing the interface Product{}
 // create a simple product list component
 /*
 
@@ -54,18 +57,58 @@ Here's why this is important:
 5. Avoiding Warnings: React will give you a warning in the console if you don't provide keys for list items.
  */
 export default function ProductsList({products}: { products: Product[] }) {
+    const [priceFilter, setPriceFilter] = useState<string>('all');
+
+    const filterProducts = (products: Product[]) => {
+        switch(priceFilter) {
+            case 'under100':
+                return products.filter(product => product.price < 100);
+            case '100to500':
+                return products.filter(product => product.price >= 100 && product.price <= 500);
+            case 'over500':
+                return products.filter(product => product.price > 500);
+            default:
+                return products;
+        }
+    }
+    const filteredProducts = filterProducts(products);
+
 
     return (
-        // clicking each product should go to the /product-detail page for that product
-        // avoid using <a> anchor tag, it causes a full page reload. This negates the benefits of a single-page application(SPA) architecture that Next.js provides
-        // Problem with Full Page Reload: All your react component states are lost, which can lead to poor user experience, specially if you have any form inputs or complex UI states.
         <div className="container mx-auto px-4 py-8">
+            <div className="mb-6">
+                <h2 className="text-2xl font-bold mb-4">Filter by Price</h2>
+                <div className="flex space-x-4">
+                    <button
+                        onClick={() => setPriceFilter('all')}
+                        className={`px-4 py-2 rounded ${priceFilter === 'all' ? 'bg-blue-500 text-white' : 'bg-orange-300'}`}
+                    >
+                        All
+                    </button>
+                    <button
+                        onClick={() => setPriceFilter('under100')}
+                        className={`px-4 py-2 rounded ${priceFilter === 'under100' ? 'bg-blue-500 text-white' : 'bg-orange-300'}`}
+                    >
+                        Under $100
+                    </button>
+                    <button
+                        onClick={() => setPriceFilter('100to500')}
+                        className={`px-4 py-2 rounded ${priceFilter === '100to500' ? 'bg-blue-500 text-white' : 'bg-orange-300'}`}
+                    >
+                        $100 - $500
+                    </button>
+                    <button
+                        onClick={() => setPriceFilter('over500')}
+                        className={`px-4 py-2 rounded ${priceFilter === 'over500' ? 'bg-blue-500 text-white' : 'bg-orange-300'}`}
+                    >
+                        Over $500
+                    </button>
+                </div>
+            </div>
             <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
-                {/* v1: Original product mapping */}
-                {/* v2: Added onClick to demonstrate state logging before navigation */}
-                {products.map((product,index) => (
+                {filteredProducts.map((product, index) => (
                     <div key={`${product.id}-${index}`}>
-                        {renderAProduct(product,index)}
+                        {renderAProduct(product, index)}
                     </div>
                 ))}
             </div>

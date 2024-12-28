@@ -1,9 +1,11 @@
 "use client"
 
 import React, {useState, useEffect} from 'react';
-import {useSearchParams} from 'next/navigation';
+import {useRouter, useSearchParams} from 'next/navigation';
 import {Product, products} from "@/app/data/product-data";
 import Link from 'next/link';
+import {fetchAllProducts} from "@/app/utils/utils";
+import {error} from "next/dist/build/output/log";
 
 // Mock api implementation details
 // step-1: define an interface for payment data
@@ -35,6 +37,8 @@ export default function CheckoutPage() {
     const searchParams = useSearchParams();
     console.log("Search Param: ", searchParams.get('items'));
 
+    const router=useRouter();
+
     // 3x useState hooks to observer the current state of the react components
     /*
     * Note- we not gonna use useEffect() for email and payment method state changes
@@ -55,16 +59,138 @@ export default function CheckoutPage() {
 
     // execute only when there is a change in the cart items
     // http://localhost:3000/checkout?items=123,345 if the items changes here, only then execute this sideEffect function
+    // useEffect(() => {
+    //     const cartItemIds = searchParams.get('items')?.split(',') || []; // http://localhost:3000/checkout?items=123,345
+    //     const items = cartItemIds
+    //         .map(id => products.find(p => p.id === id))
+    //         .filter((product) => product !== undefined);
+    //     setCartItems(items);
+    // }, [searchParams]);
+
+
+    // useEffect(() => {
+    //     // Fetch cart items from localStorage
+    //     const storedCart = localStorage.getItem('cart');
+    //     if (storedCart) {
+    //         const parsedCart = JSON.parse(storedCart);
+    //         // Filter to ensure only valid products are included
+    //         const validCartItems = parsedCart.filter((item: Product) =>
+    //             products.some(p => p.id === item.id)
+    //         );
+    //         setCartItems(validCartItems);
+    //     }
+    // }, []);
+
+    // Side effect
+    // Will be executed whenever there are changes in the http://localhost:3000/checkout?items=123,345 and the router
+    // useEffect(()=>{
+    //     const cartItemIds = searchParams.get('items')?.split(',')||[]; // http://localhost:3000/checkout?items=123,345
+    //
+    //     // if there are no items in the URL, redirect to the cart page
+    //     if (cartItemIds.length===0){
+    //         console.log("No items in the checkout. Redirecting to /cart");
+    //         router.push("/cart");
+    //         return;
+    //     }
+    //
+    //     // validate the items against the 'products'
+    //     const validItems: Product[]= cartItemIds
+    //         .map(id=>products.find(p=>p.id===id))
+    //         .filter((product):product is Product => product!==undefined);
+    //
+    //     // list the invalid items
+    //     console.log("Invalid Items: ", cartItemIds.filter(id=>!products.some(p=>p.id===id)));
+    //
+    //     if (validItems.length===0){
+    //         // if no valid items were found, redirect to the cart page
+    //         console.log("No valid items found in the checkout. Redirecting to /cart");
+    //         router.push("/cart");
+    //         return;
+    //     }else{
+    //         setCartItems(validItems)
+    //     }
+    //
+    // },[searchParams, router]);
+
     useEffect(() => {
-        const cartItemIds = searchParams.get('items')?.split(',') || []; // http://localhost:3000/checkout?items=123,345
-        const items = cartItemIds
-            .map(id => products.find(p => p.id === id))
-            .filter((product) => product !== undefined);
-        setCartItems(items);
-    }, [searchParams]);
+        const fetchProductsAndUpdateCart = async () => {
+            try {
+                const cartItemIds = searchParams.get('items')?.split(',') || [];
+
+                if (cartItemIds.length === 0) {
+                    console.log("No items in the checkout. Redirecting to /cart");
+                    router.push("/cart");
+                    return;
+                }
+
+                // Fetch all products, including newly added ones
+                const allProducts = await fetchAllProducts();
+
+                // Validate the items against all products
+                const validItems: Product[] = cartItemIds
+                    .map(id => allProducts.find(p => p.id === id))
+                    .filter((product): product is Product => product !== undefined);
+
+                console.log("Invalid Items: ", cartItemIds.filter(id => !allProducts.some(p => p.id === id)));
+
+                if (validItems.length === 0) {
+                    console.log("No valid items found in the checkout. Redirecting to /cart");
+                    router.push("/cart");
+                } else {
+                    setCartItems(validItems);
+                }
+            } catch (error) {
+                console.error("Error fetching products:", error);
+                router.push("/cart");
+            }
+        };
+
+        fetchProductsAndUpdateCart()
+            .catch((error)=>{
+                console.error("Error handling checkout:", error);
+                // Redirect to cart page in case of any error
+                router.push("/cart");
+            });
+    }, [searchParams, router]);
+
+
+
+    // New function to group cart items
+    const groupCartItems = (items: Product[]) => {
+        // Signature: array.reduce((accumulator, currentValue, index, array)
+        const groupedItems = items.reduce((acc, item) => {
+            /*
+            acc = {
+                "1": { id: "1", name: "Apple", price: 1, quantity: 2 },
+                "2": { id: "2", name: "Orange", price: 2, quantity: 1 }
+            };
+             */
+            if (!acc[item.id]) {
+                acc[item.id] = { ...item, quantity: 0 };
+            }
+            acc[item.id].quantity += 1;
+            return acc;
+        }, {} as { [key: string]: Product & { quantity: number } });
+        /*
+        // casting
+        // {} as { [key: string]: Product & { quantity: number } }
+        {
+            "1": { id: "1", name: "Apple", price: 1, quantity: 2 },
+            "2": { id: "2", name: "Orange", price: 2, quantity: 1 }
+        }
+         */
+
+        return Object.values(groupedItems);
+    };
+
+    // Group the cart items
+    const groupedCartItems = groupCartItems(cartItems);
+
+    // Calculate the total price
+    const totalPrice = groupedCartItems.reduce((sum, item) => sum + item.price * item.quantity, 0);
 
     // calculate the total cost of all cart items
-    const totalPrice = cartItems.reduce((sum, item) => sum + item.price, 0);
+    //const totalPrice = cartItems.reduce((sum, item) => sum + item.price, 0);
     console.log("Total Price: ", totalPrice);
 
     // upon successful payment, an alert will appear in the browser that the payment is done
@@ -107,6 +233,12 @@ export default function CheckoutPage() {
 
         // const result = await response.json();
 
+        // clear cart when the checkout is successful
+        const clearCart=()=>{
+            localStorage.removeItem('cart');
+            setCartItems([]);
+        }
+
         // Check if the total price is 0
         if (cartItems.length === 0 || totalPrice === 0) {
             alert("Invalid order: The total price is $0. Please add items to your cart before checking out.");
@@ -135,6 +267,12 @@ export default function CheckoutPage() {
             alert(`Payment for items ${itemNames} is done on ${date} for $${totalPrice.toFixed(2)}. Transaction ID: ${result.transactionId}. An email confirmation has been sent to ${email}.`);
             // You might want to clear the cart or redirect the user here
 
+            // Clear the cart in localStorage
+            clearCart();
+
+            // Optionally, you might want to redirect the user to a confirmation page
+            // window.location.href = '/confirmation';
+
         } catch (error) {
             console.error("Error during payment processing:", error);
             alert('An unexpected error occurred. Please try again later.');
@@ -149,10 +287,10 @@ export default function CheckoutPage() {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                 <div>
                     <h2 className="text-2xl font-semibold mb-4">Order Summary</h2>
-                    {cartItems.map((item, index) => (
+                    {groupedCartItems.map((item,index) => (
                         <div key={`${item.id}-${index}`} className="flex justify-between items-center mb-2">
-                            <span>{item.name}</span>
-                            <span>${item.price.toFixed(2)}</span>
+                            <span>{item.name} ({item.quantity}x)</span>
+                            <span>${(item.price*item.quantity).toFixed(2)}</span>
                         </div>
                     ))}
                     <div className="border-t pt-2 mt-2">

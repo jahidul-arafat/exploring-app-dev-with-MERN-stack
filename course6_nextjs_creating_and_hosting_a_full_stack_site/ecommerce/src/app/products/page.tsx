@@ -59,6 +59,6 @@ export default async function AllProductPage() {
     // const productNames = await listAllProductNames();
     // return renderProductPage(productNames);
 
-    const products = await fetchAllProducts();
+    const products = await fetchAllProducts(); // through API to fetch all products
     return renderProductListParentPage(products);
 }

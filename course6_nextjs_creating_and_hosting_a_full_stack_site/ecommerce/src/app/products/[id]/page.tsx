@@ -8,7 +8,7 @@ import React, {useEffect, useState} from "react";
 import {fetchAllProducts} from "@/app/utils/utils";
 
 // function renderOneProductDetails(product: TypeOfProduct, addToCart:typeOfAddToCart)
-function renderOneProductDetails(product: Product, addToCart:()=>void) {
+function renderOneProductDetails(product: Product, addToCartOrFavorite: (type: string) => void) {
     return ( // using tailwind CSS for styling
         <div className="container mx-auto p-8">
             <div className="flex flex-col md:flex-row">
@@ -25,13 +25,15 @@ function renderOneProductDetails(product: Product, addToCart:()=>void) {
 
                     {/* Add to Cart Button */}
                     <button
-                        onClick={addToCart} //implement this addToCart() function*/
+                        onClick={() => addToCartOrFavorite('cart')} //implement this addToCart() function*/
                         className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded mr-4">
                         Add to Cart
                     </button>
 
                     {/* Add to Favorites Button */}
-                    <button className="bg-red-500 hover:bg-red-700 text-white font-bold py-2 px-4 rounded">
+                    <button
+                        onClick={() => addToCartOrFavorite('favorite')} //implement this addToCart() function*/
+                        className="bg-red-500 hover:bg-red-700 text-white font-bold py-2 px-4 rounded">
                         Add to Favorites
                     </button>
 
@@ -54,14 +56,39 @@ function renderOneProductDetails(product: Product, addToCart:()=>void) {
 
 // 'params' is a Javascript object which has an 'id' property of type 'string'
 // params is a promise which has a property called 'id' of type 'string'
-export default function ProductDetailsPage({ params }: { params: Promise<{ id: string }> }){
-    const [product, setProduct]= useState<Product|null>(null); // to manage the local state of the product i.e. is the product ID is of a valid product
+export default function ProductDetailsPage({params}: { params: Promise<{ id: string }> }) {
+    const [product, setProduct] = useState<Product | null>(null); // to manage the local state of the product i.e. is the product ID is of a valid product
+    const [loading, setLoading] = useState(true);
     const resolvedParams = React.use(params);
 
     // whenever there is a change in localhost:3000/products/123 in the prouct id in the URL, trigger the useEffect
+    // useEffect(() => {
+    //     const foundProduct= products.find(p=>p.id===resolvedParams.id);
+    //     setProduct(foundProduct!==undefined?foundProduct:null);
+    // }, [resolvedParams.id]);
+
     useEffect(() => {
-        const foundProduct= products.find(p=>p.id===resolvedParams.id);
-        setProduct(foundProduct!==undefined?foundProduct:null);
+        async function loadProduct() {
+            setLoading(true);
+            try {
+                const allProducts = await fetchAllProducts(); // loading through API, which will also load newly added products from server's in-memory
+                const foundProduct = allProducts.find(p => p.id === resolvedParams.id);
+                console.log(`Product found: ${foundProduct?.name} (ID: ${foundProduct?.id})`);
+                setProduct(foundProduct || null);
+            } catch (error) {
+                console.error("Error fetching product:", error);
+                setProduct(null);
+            } finally {
+                console.log("Product loading completed");
+                setLoading(false);
+            }
+        }
+
+        console.log("Product loading started");
+        loadProduct() // async
+            .catch((error) => {
+                console.error("Error loading product:", error);
+            });
     }, [resolvedParams.id]);
 
     // Await the params to ensure they're properly resolved
@@ -74,26 +101,50 @@ export default function ProductDetailsPage({ params }: { params: Promise<{ id: s
     - if there is no cart, it initializes an empty array
      */
 
-    const addToCart=()=>{
-        if (product){ // only try to addToCart is there is a valid product, else no
+    const addToCartOrFavorite = (type: string) => {
+        if (product) { // only try to addToCart is there is a valid product, else no
             // get existing cart items from browser's localstorage (browser has a localStorage of 5MB)
-            const existingCart=JSON.parse(localStorage.getItem('cart')||'[]');
+            let existingItems = JSON.parse(localStorage.getItem(type) || '[]');
 
-            // Add the new product
-            existingCart.push(product);
+            // check if the item already in the favorite list, if so skip, else add the item in the favorite list
+            if (type === 'favorite') {
+                // convert existing favorites to a Set-like structure
+                const favoriteSet = new Map(existingItems.map((item: Product) => [item.id, item]));
+
+                // check if the item is already in the favorite list
+                //const isAlreadyFavorite= existingItems.some((item:Product)=>item.id==product.id);
+                if (favoriteSet.has(product.id)) {
+                    alert(`${product.name}--${product.id} is already in your favorite list!`);
+                    return;
+                }
+
+                // add the new product to the Set
+                favoriteSet.set(product.id, product);
+
+                // convert back to array
+                existingItems = Array.from(favoriteSet.values());
+            } else {
+                // Add the new product in the cart, duplicate items allowed
+                existingItems.push(product);
+            }
 
             // Save back to localStorage
-            localStorage.setItem('cart',JSON.stringify(existingCart));
-            console.log(`Existing Cart items in localstorage ${existingCart.map((pr:Product)=>pr.name).join(', ')}`);
-            alert(`${product.name} is added to cart!`);
+            localStorage.setItem(type, JSON.stringify(existingItems));
+            console.log(`Existing ${type} items in localstorage ${existingItems.map((pr: Product) => pr.name).join(', ')}`);
+            alert(`${product.name} is added to ${type}!`);
         }
     };
 
 
     // find the product with the matching id
     // const product = products.find(p => p.id === id)
+
+    // if (loading) {
+    //     return <div>Loading...</div>;
+    // }
+
     if (!product) {// if the /products/444 where 444 is the product-id not found in the product list
         return <NotFoundPage/>
     }
-    return renderOneProductDetails(product,addToCart);
+    return renderOneProductDetails(product, addToCartOrFavorite);
 }
