@@ -38,7 +38,7 @@ const renderCartItems = (cartProducts: Product[], onDelete:(id:string)=>void) =>
 };
 
 // render the cart page
-const renderCart = (cartProducts: Product[], totalPrice: number, deleteProduct: (id: string) => void) => {
+const renderCart = (cartProducts: Product[], totalPrice: number, deleteProduct: (id: string) => void, userId: string) => {
     return (
         <div className="container mx-auto px-4 py-8">
             <h1 className="text-3xl font-bold mb-6 text-gray-800">Shopping Cart</h1>
@@ -46,14 +46,14 @@ const renderCart = (cartProducts: Product[], totalPrice: number, deleteProduct: 
                 {cartProducts.length > 0 ? (
                     <>
                         <div className="p-4">
-                            {renderCartItems(cartProducts, deleteProduct)} {/* render the cart items*/}
+                            {renderCartItems(cartProducts, deleteProduct)}
                         </div>
                         <div className="bg-gray-50 px-4 py-3 sm:px-6">
                             <div className="flex justify-between items-center">
                                 <span className="text-lg font-semibold text-gray-900">Total:</span>
                                 <span className="text-2xl font-bold text-blue-600">${totalPrice.toFixed(2)}</span>
                             </div>
-                            <Link href={`/checkout?items=${cartProducts.map(p => p.id).join(',')}`} className="block mt-4 w-full">
+                            <Link href={`/user/${userId}/checkout?items=${cartProducts.map(p => p.id).join(',')}`} className="block mt-4 w-full">
                                 <button className="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded transition duration-300 ease-in-out">
                                     Proceed to Checkout
                                 </button>
@@ -73,41 +73,33 @@ const renderCart = (cartProducts: Product[], totalPrice: number, deleteProduct: 
     );
 };
 
-export default function CartPage() {
-    //const [cartProductIDs] = useState<string[]>(["111","100", "123", "345", "999"]);
+export default function CartPage({ params }: { params: { id: string } }) {
     const [cartProducts, setCartProducts] = useState<Product[]>([]);
     const [allProducts, setAllProducts] = useState<Product[]>([]);
-    const router=useRouter(); // its a hook
+    const router = useRouter();
+    const userId = params.id;
 
-    // Function to clear cart and redirect to /products
     const clearCartAndRedirect = () => {
         console.log("Clearing cart and redirecting to the /products page");
-        localStorage.removeItem('cart');
+        localStorage.removeItem(`cart_${userId}`);
         setCartProducts([]);
         router.push("/products");
     };
 
-
-    // useRouter() hook to redirect the user to the /products page if there are no items in the cart
-
     useEffect(() => {
         const fetchProductsAndUpdateCart = async () => {
             try {
-                // Fetch all products, including newly added ones
                 const fetchedProducts = await fetchAllProducts();
                 setAllProducts(fetchedProducts);
 
-                // Get cart items from local storage
-                const cartItems = JSON.parse(localStorage.getItem('cart') || '[]');
+                const cartItems = JSON.parse(localStorage.getItem(`${userId}_cart`) || '[]');
 
-                // Find corresponding products in the fetched product list
                 const validCartProducts: Product[] = cartItems.filter((item: Product) =>
                     fetchedProducts.some(p => p.id === item.id)
                 );
 
                 setCartProducts(validCartProducts);
 
-                // If the cart is empty, redirect to the product page
                 if (validCartProducts.length === 0) {
                     console.log("No valid items found in the cart. Redirecting to the /products page");
                     clearCartAndRedirect();
@@ -118,30 +110,24 @@ export default function CartPage() {
             }
         };
 
-        fetchProductsAndUpdateCart().catch((error)=>{
+        fetchProductsAndUpdateCart().catch((error) => {
             console.error("Error fetching products and updating cart:", error);
-            clearCartAndRedirect(); // redirect to /products page in case of any error while fetching products
+            clearCartAndRedirect();
         });
-    }, [router]); // useEffect() hook in this component will execute only once when the component mounts.
-    // what woudl happen if we dont use 'router' in the dependency array?
+    }, [router, userId]);
 
-    // Delete a product from cart
-    const deleteProduct=(id:string)=>{
-        const indexToRemove = cartProducts.findIndex(product=>product.id===id); // returns the first product matching the condition
-        // if the item to be deleted is found
-        if(indexToRemove!==-1){
-            const updateCart=[...cartProducts];
-            updateCart.splice(indexToRemove,1); // removes the single item at index found
-            setCartProducts(updateCart);
-            localStorage.setItem('cart',JSON.stringify(cartProducts));
+    const deleteProduct = (id: string) => {
+        const indexToRemove = cartProducts.findIndex(product => product.id === id);
+        if (indexToRemove !== -1) {
+            const updatedCart = [...cartProducts];
+            updatedCart.splice(indexToRemove, 1);
+            setCartProducts(updatedCart);
+            localStorage.setItem(`${userId}_cart`, JSON.stringify(updatedCart));
 
-            // if the cart becomes empty after deletion, redirect to teh products page
-            if (updateCart.length===0){
+            if (updatedCart.length === 0) {
                 console.log("Cart becomes empty after item deletions. Redirecting to the /products page");
-                // Clear the cart in localStorage and redirect to /pages
                 clearCartAndRedirect();
             }
-
         }
     };
 
@@ -155,5 +141,5 @@ export default function CartPage() {
 
     console.log(`Total Cost of all items in the cart: ${totalPrice}`);
 
-    return renderCart(cartProducts,totalPrice,deleteProduct);
+    return renderCart(cartProducts, totalPrice, deleteProduct, userId);
 }

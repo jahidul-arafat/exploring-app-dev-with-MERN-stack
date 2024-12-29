@@ -4,20 +4,24 @@
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { Product, products } from "@/app/data/product-data";
+import {useRouter} from "next/navigation";
 
 // Define the FavoritePage component
-export default function FavoritePage() {
+export default function FavoritePage({ params }: { params: { id: string } }) {
     // State to store favorite products
     // Initialize as an empty array of Product type
     const [favoriteProducts, setFavoriteProducts] = useState<Product[]>([]);
     const [favoriteChange, setFavoriteChange] = useState(0); // will be used in the useEffect() dependency array
                                     // because favorite items will not only be changed inside from the react component, but by the API too
+    const userId = params.id;
+    const router = useRouter();
 
+    // useEffect hook to fetch and set favorite products when the component mounts
     // useEffect hook to fetch and set favorite products when the component mounts
     useEffect(() => {
         console.log(`favorite useEffect() triggered for ${favoriteChange} times. Reloading from localStorage('favorite')`);
         // Attempt to retrieve favorite items from localStorage
-        const storedFavorites = localStorage.getItem('favorite');
+        const storedFavorites = localStorage.getItem(`${userId}_favorite`);
 
         // If favorites exist in localStorage
         if (storedFavorites) {
@@ -36,7 +40,7 @@ export default function FavoritePage() {
         // The empty dependency array [] ensures this effect runs only once when the component mounts
         // In this specific case, using [] is the correct choice because we only need to load the favorites from localStorage once when the component mounts.
         // The favorites in localStorage won't change unless our component changes them, so there's no need to re-run this effect on every render.
-    }, [favoriteChange]); // no need to reread from the localstorage
+    }, [favoriteChange,userId]); // no need to reread from the localstorage
 
     // Function to remove a product from favorites
     const removeFavorite = (id: string) => {
@@ -47,11 +51,16 @@ export default function FavoritePage() {
         //setFavoriteProducts(updatedFavorites); // becomes redundent since useEffect() will be always trigger everytime a changes in the favorite item list using setFavoriteChange()
 
         // Update localStorage to persist the changes
-        localStorage.setItem('favorite', JSON.stringify(updatedFavorites));
+        localStorage.setItem(`${userId}_favorite`, JSON.stringify(updatedFavorites));
 
         // trigger the effect to refresh from localstorage
 
         setFavoriteChange(prev=>prev+1);
+
+        if (updatedFavorites.length === 0) {
+            console.log("No items left in favorites. Redirecting to the /products page");
+            router.push("/products");
+        }
     };
 
     // Render the component

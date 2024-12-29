@@ -33,9 +33,10 @@ const mockProcessPayment = async (paymentData: PaymentData): Promise<{ success: 
 };
 
 // Checkout component
-export default function CheckoutPage() {
+export default function CheckoutPage({ params }: { params: { id: string } }) {
     const searchParams = useSearchParams();
     console.log("Search Param: ", searchParams.get('items'));
+    const userId = params.id;
 
     const router=useRouter();
 
@@ -119,7 +120,7 @@ export default function CheckoutPage() {
 
                 if (cartItemIds.length === 0) {
                     console.log("No items in the checkout. Redirecting to /cart");
-                    router.push("/cart");
+                    router.push(`/user/${userId}/cart`);
                     return;
                 }
 
@@ -135,13 +136,13 @@ export default function CheckoutPage() {
 
                 if (validItems.length === 0) {
                     console.log("No valid items found in the checkout. Redirecting to /cart");
-                    router.push("/cart");
+                    router.push(`/user/${userId}/cart`);
                 } else {
                     setCartItems(validItems);
                 }
             } catch (error) {
                 console.error("Error fetching products:", error);
-                router.push("/cart");
+                router.push(`/user/${userId}/cart`);
             }
         };
 
@@ -149,9 +150,9 @@ export default function CheckoutPage() {
             .catch((error)=>{
                 console.error("Error handling checkout:", error);
                 // Redirect to cart page in case of any error
-                router.push("/cart");
+                router.push(`/user/${userId}/cart`);
             });
-    }, [searchParams, router]);
+    }, [searchParams, router,userId]);
 
 
 
@@ -235,7 +236,7 @@ export default function CheckoutPage() {
 
         // clear cart when the checkout is successful
         const clearCart=()=>{
-            localStorage.removeItem('cart');
+            localStorage.removeItem(`${userId}_cart`);
             setCartItems([]);
         }
 
@@ -244,15 +245,21 @@ export default function CheckoutPage() {
             alert("Invalid order: The total price is $0. Please add items to your cart before checking out.");
             return; // Exit the function early
         }
+        if (!email || !paymentMethod) {
+            alert('Please fill in all fields');
+            return;
+        }
+
+        const paymentData: PaymentData = {
+            items: cartItems,
+            email,
+            paymentMethod,
+            totalPrice: totalPrice,
+        };
 
         try {
             // Use the mock payment process instead of actual fetch
-            const result = await mockProcessPayment({
-                items: cartItems,
-                email: email,
-                paymentMethod: paymentMethod,
-                totalPrice: totalPrice
-            });
+            const result = await mockProcessPayment(paymentData);
 
             if (!result.success) {
                 console.error("Payment processing failed");
@@ -272,6 +279,8 @@ export default function CheckoutPage() {
 
             // Optionally, you might want to redirect the user to a confirmation page
             // window.location.href = '/confirmation';
+            console.log("Checkout Successfully Completed.");
+            router.push(`/user/${userId}/cart`);
 
         } catch (error) {
             console.error("Error during payment processing:", error);
@@ -345,7 +354,7 @@ export default function CheckoutPage() {
             </div>
 
             <div className="mt-8">
-                <Link href="/cart" className="text-blue-600 hover:underline">
+                <Link href={`/user/${userId}/cart`} className="text-blue-600 hover:underline">
                     ← Back to Cart
                 </Link>
             </div>

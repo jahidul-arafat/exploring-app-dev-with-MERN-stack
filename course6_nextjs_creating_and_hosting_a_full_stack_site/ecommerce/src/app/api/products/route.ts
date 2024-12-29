@@ -21,8 +21,11 @@ This behavior is typical for development environments or when working with in-me
 // http://localhost:3000/api/products (all products)
 // http://localhost:3000/api/products?id=<product_id> (single product)
 export async function GET(request: Request) {
+    console.log("GET request received at /api/products: ", request);
     try {
         const url = new URL(request.url);
+        console.log("GET Url: ", request.url);
+        console.log("Search params: ", url.searchParams);
         const id = url.searchParams.get('id');
 
         if (id) {
@@ -32,7 +35,7 @@ export async function GET(request: Request) {
                 return new Response(
                     JSON.stringify(product),
                     {
-                        headers: {'Content-Type': 'application/json'},
+                        headers: {'Content-Type': 'application/json'}, // what this string will be returned to the client when received at the client end
                         status: 200,
                     }
                 );
@@ -69,9 +72,11 @@ export async function GET(request: Request) {
 
 // POST method to handle both single product and bulk product additions, while also checking for existing product IDs.
 export async function POST(request: Request) {
+    console.log("POST request received at /api/products: ", request);
     try {
         // Parse the request body
         const body = await request.json();
+        console.log("Parsed request body: ", body);
 
         // Check if it's a single product or an array of products
         const newProducts = Array.isArray(body) ? body : [body];
@@ -95,7 +100,7 @@ export async function POST(request: Request) {
             }
 
             // Add the new product
-            console.log("Adding new product: ${newProduct.name} (ID: ${newProduct.id})");
+            console.log(`Adding new product: ${newProduct.name} (ID: ${newProduct.id})`);
             products.push(newProduct);
             addedProducts.push(newProduct);
         }

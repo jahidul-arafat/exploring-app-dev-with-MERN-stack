@@ -46,7 +46,7 @@ function renderProductListParentPage(products: Product[]){
 
             <footer className="mt-12 text-center text-gray-500">
                 <p>Can't find what you're looking for?
-                    <Link href="/contact-us" className="text-blue-500 hover:underline">Contact us
+                    <Link href="/contact-us" className="text-blue-500 hover:underline"> Contact us
                     </Link></p>
             </footer>
         </div>
