@@ -6,11 +6,12 @@ import { Product } from "@/app/data/product-data";
 import { useRouter } from 'next/navigation';
 import { fetchAllProducts } from "@/app/utils/utils";
 
-export default function FavoritePage({ params }: { params: { id: string } }) {
+export default function FavoritePage({ params }: { params: Promise<{ id: string }> }) {
     const [favoriteProducts, setFavoriteProducts] = useState<Product[]>([]);
     const [favoriteChange, setFavoriteChange] = useState(0);
     const router = useRouter();
-    const userId = params.id;
+    const resolvedParams = React.use(params);
+    const userId = resolvedParams.id;
 
     useEffect(() => {
         const fetchProductsAndUpdateFavorites = async () => {
@@ -51,7 +52,7 @@ export default function FavoritePage({ params }: { params: { id: string } }) {
             <h1 className="text-3xl font-bold mb-6">Your Favorites</h1>
             {favoriteProducts.length === 0 ? (
                 <div className="text-center">
-                    <p className="mb-4">You haven't added any favorites yet.</p>
+                    <p className="mb-4">You haven&#39;t added any favorites yet.</p>
                     <button
                         onClick={handleAddToFavorites}
                         className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 transition"

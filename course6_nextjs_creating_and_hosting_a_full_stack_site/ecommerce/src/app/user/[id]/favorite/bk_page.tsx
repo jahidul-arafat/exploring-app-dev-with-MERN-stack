@@ -69,7 +69,7 @@ export default function FavoritePage({ params }: { params: { id: string } }) {
             <h1 className="text-3xl font-bold mb-6">Your Favorites</h1>
             {/* Conditional rendering based on whether there are favorite products */}
             {favoriteProducts.length === 0 ? (
-                <p>You haven't added any favorites yet.</p>
+                <p>You haven&#39;t added any favorites yet.</p>
             ) : (
                 // Grid layout for favorite products
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">

@@ -1,7 +1,7 @@
 // localhost:3000/products/<product-id>
 'use client'
 
-import {Product, products} from "@/app/data/product-data";
+import {Product} from "@/app/data/product-data";
 import NotFoundPage from "@/app/not-found";
 import Link from "next/link";
 import React, {useEffect, useState} from "react";
