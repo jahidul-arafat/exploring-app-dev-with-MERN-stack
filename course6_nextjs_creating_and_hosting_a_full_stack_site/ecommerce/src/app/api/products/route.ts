@@ -21,7 +21,7 @@ This behavior is typical for development environments or when working with in-me
 // http://localhost:3000/api/products (all products)
 // http://localhost:3000/api/products?id=<product_id> (single product)
 export async function GET(request: Request) {
-    console.log("GET request received at /api/products: ", request);
+    console.log("GET request received at /api/products.. ");
     try {
         const url = new URL(request.url);
         console.log("GET Url: ", request.url);

@@ -4,7 +4,6 @@ import React, {useEffect, useState} from "react";
 import Link from "next/link";
 import {Product} from "@/app/data/product-data";
 import NotFoundPage from "@/app/not-found";
-import {addToCart, addToFavorite} from "@/app/utils/utils";
 // import { fetchAllProducts } from "@/app/utils/utils";
 
 // this is an individual product details page component
@@ -59,35 +58,39 @@ export default function ProductDetailsPage({params}: { params: Promise<{ id: str
         loadProduct();
     }, [resolvedParams.id]);
 
-    // const addToCart = () => {
-    //     const user = localStorage.getItem('user');
-    //     if (!user) {
-    //         alert("Please log in to add items to your cart.");
-    //         return;
-    //     }
-    //
-    //     if (product) {
-    //         const cartKey = `${user}_cart`;
-    //         const cart = JSON.parse(localStorage.getItem(cartKey) || '[]');
-    //         cart.push(product);
-    //         localStorage.setItem(cartKey, JSON.stringify(cart));
-    //         alert(`${product.name} has been added to your cart.`);
-    //     }
-    // };
+    const addToCart = () => {
+        const user = localStorage.getItem('user');
+        if (!user) {
+            alert("Please log in to add items to your cart.");
+            return;
+        }
 
-    const handleAddToCart = async (product: Product) => {
-        try {
-            await addToCart(product);
-        } catch (error) {
-            alert(error instanceof Error ? error.message : 'An error occurred');
+        if (product) {
+            const cartKey = `${user}_cart`;
+            const cart = JSON.parse(localStorage.getItem(cartKey) || '[]');
+            cart.push(product);
+            localStorage.setItem(cartKey, JSON.stringify(cart));
+            alert(`${product.name} has been added to your cart.`);
         }
     };
 
-    const handleAddToFavorite = (product: Product) => {
-        try {
-            addToFavorite(product);
-        } catch (error) {
-            alert(error instanceof Error ? error.message : 'An error occurred');
+    const addToFavorite = () => {
+        const user = localStorage.getItem('user');
+        if (!user) {
+            alert("Please log in to add items to your favorites.");
+            return;
+        }
+
+        if (product) {
+            const favoriteKey = `${user}_favorite`;
+            const favorites = JSON.parse(localStorage.getItem(favoriteKey) || '[]');
+            if (!favorites.some((item: Product) => item.id === product.id)) {
+                favorites.push(product);
+                localStorage.setItem(favoriteKey, JSON.stringify(favorites));
+                alert(`${product.name} has been added to your favorites.`);
+            } else {
+                alert(`${product.name} is already in your favorites.`);
+            }
         }
     };
 
@@ -111,18 +114,11 @@ export default function ProductDetailsPage({params}: { params: Promise<{ id: str
                     <p className="text-2xl text-gray-600 mb-6">${product.price}</p>
                     <p className="text-gray-700 mb-6">{product.description}</p>
                     <div className="flex space-x-4 mb-6">
-
-                        <button onClick={(e) => {
-                            e.preventDefault(); // prevent the browser from following the link
-                            handleAddToCart(product);
-                        }}
+                        <button onClick={addToCart}
                                 className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">
                             Add to Cart
                         </button>
-                        <button onClick={(e) => {
-                            e.preventDefault(); // prevent the browser from following the link
-                            handleAddToFavorite(product)
-                        }}
+                        <button onClick={addToFavorite}
                                 className="bg-red-500 hover:bg-red-700 text-white font-bold py-2 px-4 rounded">
                             Add to Favorites
                         </button>

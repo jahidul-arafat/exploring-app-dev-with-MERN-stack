@@ -2,10 +2,9 @@
 
 import React, {useState, useEffect} from 'react';
 import {useRouter, useSearchParams} from 'next/navigation';
-import {Product, products} from "@/app/data/product-data";
+import {Product} from "@/app/data/product-data";
 import Link from 'next/link';
 import {fetchAllProducts} from "@/app/utils/utils";
-import {error} from "next/dist/build/output/log";
 
 // Mock api implementation details
 // step-1: define an interface for payment data
@@ -28,15 +27,20 @@ const mockProcessPayment = async (paymentData: PaymentData): Promise<{ success: 
             transactionId: 'mock-' + paymentData.email.split("@")[0] + "-" + Math.random().toString(36).substr(2, 9)
         };
     } else {
-        throw new Error('Payment failed');
+        console.error('Payment failed');
+        return {
+            success: false,
+            transactionId: 'XXXX'
+        };
     }
 };
 
 // Checkout component
-export default function CheckoutPage({ params }: { params: { id: string } }) {
+export default function CheckoutPage({ params }: { params: Promise<{ id: string }> }) {
     const searchParams = useSearchParams();
     console.log("Search Param: ", searchParams.get('items'));
-    const userId = params.id;
+    const resolvedParams = React.use(params);
+    const userId = resolvedParams.id;
 
     const router=useRouter();
 
@@ -235,10 +239,40 @@ export default function CheckoutPage({ params }: { params: { id: string } }) {
         // const result = await response.json();
 
         // clear cart when the checkout is successful
-        const clearCart=()=>{
-            localStorage.removeItem(`${userId}_cart`);
-            setCartItems([]);
-        }
+        // const clearCart=()=>{
+        //     localStorage.removeItem(`${userId}_cart`);
+        //     setCartItems([]);
+        // }
+        const clearCart = async () => {
+            try {
+                const response = await fetch(`/api/user/${userId}/cart`, {
+                    method: 'DELETE',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ productIds: cartItems.map(item => item.id) }),
+                });
+
+                if (!response.ok) {
+                    console.error('Failed to clear cart');
+                    return;
+                }
+
+                const result = await response.json();
+
+                console.log('Cart cleared:', result);
+
+                // Update local state
+                setCartItems([]);
+
+                // Clear local storage
+                localStorage.removeItem(`${userId}_cart`);
+
+            } catch (error) {
+                console.error('Error clearing cart:', error);
+                alert('Failed to clear cart. Please try again.');
+            }
+        };
 
         // Check if the total price is 0
         if (cartItems.length === 0 || totalPrice === 0) {
@@ -275,7 +309,7 @@ export default function CheckoutPage({ params }: { params: { id: string } }) {
             // You might want to clear the cart or redirect the user here
 
             // Clear the cart in localStorage
-            clearCart();
+            await clearCart();
 
             // Optionally, you might want to redirect the user to a confirmation page
             // window.location.href = '/confirmation';
@@ -336,6 +370,7 @@ export default function CheckoutPage({ params }: { params: { id: string } }) {
                                 <option value="">Select a payment method</option>
                                 <option value="credit">Credit Card</option>
                                 <option value="paypal">PayPal</option>
+                                <option value="debit">Debit Card</option>
                             </select>
                         </div>
                         <button

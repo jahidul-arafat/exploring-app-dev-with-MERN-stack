@@ -3,70 +3,60 @@
 import Image from "next/image";
 import Link from "next/link";
 import {Product} from "@/app/data/product-data";
-import {useEffect, useState} from "react"; // importing the interface Product{}
+import {useState} from "react"; // importing the interface Product{}
 import {FaHeart, FaShoppingCart} from 'react-icons/fa';
-import {addToCart, addToFavorite, deleteProductFromCart} from "@/app/utils/utils"; // Import icons
+import {addToCart, addToFavorite} from "@/app/utils/utils"; // Import icons
 // create a simple product list component
+/*
 
-function ProductItem({ product, index }: { product: Product; index: number }) {
-    const [isInCart, setIsInCart] = useState(false);
+The function expects a single object as its argument.
+This object should have a property named products.
+The type of the products property is an array of Product objects (Product[]).
+The curly braces {} in the parameter list are used for object destructuring, allowing you to directly access the products property of the passed object.
 
-    useEffect(() => {
-        async function checkCartStatus() {
-            try {
-                const userId = 'user2'; // Replace this with actual user ID retrieval logic
-                const response = await fetch(`/api/user/${userId}/cart`);
-                if (!response.ok) {
-                    console.error('Failed to fetch cart items');
-                    return;
-                }
-                const cartItems: Product[] = await response.json();
-                setIsInCart(cartItems.some(item => item.id === product.id));
-            } catch (error) {
-                console.error('Error checking if product is in cart:', error);
-                setIsInCart(false);
-            }
-        }
+- When you use this component, you would call it like this: <ProductsList products={someArrayOfProducts} />
 
-        checkCartStatus();
-    }, [product.id]);
+: {products: Product[]}: This part explicitly defines the type of the entire parameter object. It's saying that the function expects an object with a products property that is an array of Product objects.
+ */
 
-    const handleAddToCart = async () => {
+/*
+Glimpse of the Product
+{
+        id: '123',
+        name: 'Hat',
+        imageUrl: 'hat.jpg',
+        description: 'Cheer the team on in style with our unstructured, low crown, six-panel baseball cap made of 100% organic cotton twill. Featuring our original Big Star Collectibles artwork, screen-printed with PVC- and phthalate-free inks. Complete with matching sewn ventilation eyelets, and adjustable fabric closure.',
+        price: 29,
+}
+ */
+
+// function renderAProduct(product: Product,index:number) {
+//     return (
+//         <div
+//             className="bg-white rounded-lg shadow-md overflow-hidden transition-transform duration-300 hover:scale-105">
+//             <Link key={`${product.id}-${index}`} href={"/products/" + product.id}>
+//                 <div className="p-4">
+//                     <Image className="w-full h-48 object-cover mb-4" src={'/' + product.imageUrl} alt={product.name}
+//                            width={150} height={150}/>
+//                     <h2 className="text-sm text-gray-600 mb-2">{`Product ID: ${product.id}`}</h2>
+//                     <h2 className="text-lg font-semibold mb-2">{product.name}</h2>
+//                     <p className="text-blue-600 font-bold">${product.price}</p>
+//                 </div>
+//             </Link>
+//         </div>
+//     );
+// }
+
+async function renderAProduct(product: Product, index: number) {
+    const handleAddToCart = async (product: Product) => {
         try {
             await addToCart(product);
-            setIsInCart(true);
         } catch (error) {
             alert(error instanceof Error ? error.message : 'An error occurred');
         }
     };
 
-    // const handleRemoveFromCart = async () => {
-    //     try {
-    //         // Implement remove from cart logic here
-    //         console.log('Removing from cart');
-    //         alert("Removing from cart");
-    //         setIsInCart(false);
-    //     } catch (error) {
-    //         alert(error instanceof Error ? error.message : 'An error occurred');
-    //     }
-    // };
-    const handleRemoveFromCart = async () => {
-        try {
-            //const userId = 'user2'; // Replace this with actual user ID retrieval logic
-            const userId = localStorage.getItem('user');
-            if (!userId) {
-                alert("Please log in to add items to your favorites.");
-                return;
-            }
-            await deleteProductFromCart(userId, product.id);
-            setIsInCart(false);
-        } catch (error) {
-            console.error('Error removing product from cart:', error);
-            alert(error instanceof Error ? error.message : 'An error occurred while removing from cart');
-        }
-    };
-
-    const handleAddToFavorite = () => {
+    const handleAddToFavorite = (product: Product) => {
         try {
             addToFavorite(product);
         } catch (error) {
@@ -74,10 +64,38 @@ function ProductItem({ product, index }: { product: Product; index: number }) {
         }
     };
 
+    async function productIsInCart(product: Product): Promise<boolean> {
+        try {
+            // Assuming we have a way to get the current user's ID
+            const userId = 'user2'; // Replace this with actual user ID retrieval logic
+            // const user = localStorage.getItem('user');
+            // if (!user) {
+            //     alert("Please log in to add items to your cart.");
+            //     return;
+            // }
+            //
+            // // Fetch the cart items from the API
+            const response = await fetch(`/api/user/${userId}/cart`);
+            //
+            // if (!response.ok) {
+            //     throw new Error('Failed to fetch cart items');
+            // }
+
+            const cartItems: Product[] = await response.json();
+
+            // Check if the product exists in the cart
+            return cartItems.some(item => item.id === product.id);
+        } catch (error) {
+            console.error('Error checking if product is in cart:', error);
+            return false; // Assume product is not in cart if there's an error
+        }
+    }
+
     return (
-        <div className="bg-white rounded-lg shadow-md overflow-hidden transition-transform duration-300 hover:scale-105 relative">
+        <div
+            className="bg-white rounded-lg shadow-md overflow-hidden transition-transform duration-300 hover:scale-105 relative">
             <Link key={`${product.id}-${index}`} href={"/products/" + product.id}>
-                <div className="p-6">
+                <div className="p-4">
                     <Image
                         className="w-full h-48 object-cover mb-4"
                         src={'/' + product.imageUrl}
@@ -85,38 +103,43 @@ function ProductItem({ product, index }: { product: Product; index: number }) {
                         width={150}
                         height={150}
                     />
-                    <h2 className="text-sm text-gray-600">{`Product ID: ${product.id}`}</h2>
-                    <h2 className="text-lg font-semibold mb-3">{product.name}</h2>
+                    <h2 className="text-sm text-gray-600 mb-2">{`Product ID: ${product.id}`}</h2>
+                    <h2 className="text-lg font-semibold mb-2">{product.name}</h2>
                     <p className="text-blue-600 font-bold">${product.price}</p>
                 </div>
             </Link>
             <div className="absolute bottom-0 left-0 right-0 p-4 bg-white bg-opacity-100">
                 <div className="flex justify-between">
-                    {isInCart ? ( // javascript equivalent: if (isInCart) {...}
+                    {await productIsInCart(product) ? (
                         <button
                             onClick={(e) => {
-                                e.preventDefault();
-                                handleRemoveFromCart();
+                                e.preventDefault(); // prevent the browser from following the link
+                                console.log('Removing from cart');
+                                alert("removing from cart");
                             }}
                             className="bg-yellow-500 hover:bg-blue-600 text-white px-3 py-1 rounded flex items-center"
                         >
                             <FaShoppingCart className="mr-2"/> Remove from Cart
                         </button>
-                    ) : ( // javascript equivalent: else {...}
+
+                    ) : (
                         <button
                             onClick={(e) => {
-                                e.preventDefault();
-                                handleAddToCart();
+                                e.preventDefault(); // prevent the browser from following the link
+                                handleAddToCart(product);
                             }}
                             className="bg-yellow-500 hover:bg-blue-600 text-white px-3 py-1 rounded flex items-center"
                         >
                             <FaShoppingCart className="mr-2"/> Add to Cart
                         </button>
                     )}
+
                     <button
                         onClick={(e) => {
-                            e.preventDefault();
-                            handleAddToFavorite();
+                            e.preventDefault(); // prevent the browser from following the link
+                            // In React, events bubble up the component tree.
+                            // The preventDefault() stops the click event from propagating up to the <Link> component, which would otherwise interpret the click as a navigation action.
+                            handleAddToFavorite(product);
                         }}
                         className="bg-gray-50 hover:bg-red-600 text-white px-3 py-1 rounded flex items-center"
                     >
@@ -127,7 +150,6 @@ function ProductItem({ product, index }: { product: Product; index: number }) {
         </div>
     );
 }
-
 
 /*
 Why key in Div where each Div is a child component of the Parent component ProductsList
@@ -191,7 +213,9 @@ export default function ProductsList({products}: { products: Product[] }) {
             </div>
             <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
                 {filteredProducts.map((product, index) => (
-                    <ProductItem key={`${product.id}-${index}`} product={product} index={index}/>
+                    <div key={`${product.id}-${index}`}>
+                        {renderAProduct(product, index)}
+                    </div>
                 ))}
             </div>
         </div>
