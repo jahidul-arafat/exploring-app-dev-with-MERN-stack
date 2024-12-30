@@ -6,6 +6,8 @@ import {Product} from "@/app/data/product-data";
 import Link from 'next/link';
 import {fetchAllProducts} from "@/app/utils/utils";
 
+export const dynamic='force-dynamic';
+
 // Mock api implementation details
 // step-1: define an interface for payment data
 interface PaymentData {

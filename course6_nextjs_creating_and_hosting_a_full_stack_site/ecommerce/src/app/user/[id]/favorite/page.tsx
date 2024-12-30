@@ -6,6 +6,8 @@ import { Product } from "@/app/data/product-data";
 import { useRouter } from 'next/navigation';
 import { fetchAllProducts } from "@/app/utils/utils";
 
+export const dynamic='force-dynamic';
+
 export default function FavoritePage({ params }: { params: Promise<{ id: string }> }) {
     const [favoriteProducts, setFavoriteProducts] = useState<Product[]>([]);
     const [favoriteChange, setFavoriteChange] = useState(0);

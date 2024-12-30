@@ -7,6 +7,8 @@ import NotFoundPage from "@/app/not-found";
 import {addToCart, addToFavorite} from "@/app/utils/utils";
 // import { fetchAllProducts } from "@/app/utils/utils";
 
+export const dynamic='force-dynamic';
+
 // this is an individual product details page component
 export default function ProductDetailsPage({params}: { params: Promise<{ id: string }> }) {
     const [product, setProduct] = useState<Product | null>(null);

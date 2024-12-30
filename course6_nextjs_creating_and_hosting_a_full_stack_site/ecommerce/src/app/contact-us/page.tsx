@@ -2,6 +2,10 @@
 
 import React, { useState } from 'react';
 
+//  statement is used in Next.js to control the rendering behavior of a page or layout.
+//  In this case, it's forcing the page to be dynamically rendered on each request.
+export const dynamic='force-dynamic';
+
 const products = [
     { id: '1', name: 'Hat' },
     { id: '2', name: 'Mug' },

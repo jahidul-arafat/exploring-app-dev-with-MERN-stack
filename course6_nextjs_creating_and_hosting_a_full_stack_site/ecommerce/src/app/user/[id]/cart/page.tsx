@@ -3,6 +3,8 @@ import React from "react";
 import {Product} from "@/app/data/product-data";
 import ClientCartWrapper from "@/app/user/[id]/cart/ClientCartWrapper";
 
+export const dynamic='force-dynamic';
+
 async function fetchCartItems(userId: string): Promise<Product[]> {
     const response = await fetch(`http://localhost:3000/api/user/${userId}/cart`);
     if (!response.ok) {

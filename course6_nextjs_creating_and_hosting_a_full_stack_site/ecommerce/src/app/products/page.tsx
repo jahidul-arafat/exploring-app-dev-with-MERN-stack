@@ -32,6 +32,8 @@ import {Product} from "@/app/data/product-data";
 import Link from "next/link";
 import {fetchAllProducts} from "@/app/utils/utils";
 
+export const dynamic='force-dynamic';
+
 function renderProductListParentPage(products: Product[]){
     return (
         <div className="container mx-auto px-4 py-8">
