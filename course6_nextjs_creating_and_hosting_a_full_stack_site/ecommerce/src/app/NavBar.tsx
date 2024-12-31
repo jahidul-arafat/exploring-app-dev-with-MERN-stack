@@ -27,18 +27,13 @@
 import Link from "next/link";
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
+import {useUser} from './UserContext';
 
 function NavBar() {
-    const [user, setUser] = useState<string | null>(null);
+    //const [user, setUser] = useState<string | null>(null);
+    const {user,setUser, cartCount,setCartCount}= useUser();
     const [showDropdown, setShowDropdown] = useState(false);
     const router = useRouter();
-
-    useEffect(() => {
-        const loggedInUser = localStorage.getItem('user');
-        if (loggedInUser) {
-            setUser(loggedInUser);
-        }
-    }, []);
 
     const handleLogin = () => {
         const username = prompt("Please enter your username to login:");
@@ -51,9 +46,19 @@ function NavBar() {
     const handleLogout = () => {
         localStorage.removeItem('user');
         setUser(null);
+        setCartCount(0);
         setShowDropdown(false);
         router.push('/products');
     };
+
+
+    useEffect(() => {
+        const loggedInUser = localStorage.getItem('user');
+        if (loggedInUser) {
+            setUser(loggedInUser);
+        }
+    }, []);
+
 
     return (
         <nav className="bg-white shadow-md">
@@ -98,6 +103,10 @@ function NavBar() {
                                     <Link href={`/user/${user}/favorite`}
                                           className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
                                         My Favorites
+                                    </Link>
+                                    <Link href={`/user/${user}/order`}
+                                          className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
+                                        My Orders
                                     </Link>
                                     <button
                                         onClick={handleLogout}
