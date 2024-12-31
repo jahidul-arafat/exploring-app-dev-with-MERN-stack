@@ -1,15 +1,17 @@
 import type { NextConfig } from "next";
+import withBundleAnalyzer from '@next/bundle-analyzer';
 
-// const nextConfig: NextConfig = {
-//   /* config options here */
-// };
+// Configuration-01: with bundle analyzer
+// Enable the bundle analyzer conditionally
+const bundleAnalyzer = withBundleAnalyzer({
+    enabled: process.env.ANALYZE === 'true',
+});
 
-// uncomment below
-const nextConfig: NextConfig = {
+const nextConfig: NextConfig = bundleAnalyzer({
     eslint: {
         ignoreDuringBuilds: true,
     },
-    typescript:{
+    typescript: {
         ignoreBuildErrors: true,
     },
     async rewrites() {
@@ -20,9 +22,37 @@ const nextConfig: NextConfig = {
             },
         ];
     },
-};
+});
 
 export default nextConfig;
+
+
+// Configuration-02: without bundle analyzer
+// import type { NextConfig } from "next";
+//
+// // const nextConfig: NextConfig = {
+// //   /* config options here */
+// // };
+//
+// // uncomment below
+// const nextConfig: NextConfig = {
+//     eslint: {
+//         ignoreDuringBuilds: true,
+//     },
+//     typescript:{
+//         ignoreBuildErrors: true,
+//     },
+//     async rewrites() {
+//         return [
+//             {
+//                 source: '/api-docs',
+//                 destination: '/api/api-docs',
+//             },
+//         ];
+//     },
+// };
+//
+// export default nextConfig;
 
 
 // import type { NextConfig } from "next";
