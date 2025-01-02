@@ -122,7 +122,7 @@ const ClientCartWrapper = ({initialCartProducts, userId}: { initialCartProducts:
     //     }
     // };
 
-    const totalPrice = cartProducts.reduce((sum, product) => sum + product.price, 0);
+    const totalPrice = cartProducts? cartProducts.reduce((sum, product) => sum + product.price, 0):0;
 
     return (
         <ShoppingCartList

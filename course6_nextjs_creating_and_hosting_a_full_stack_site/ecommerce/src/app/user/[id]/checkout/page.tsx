@@ -51,7 +51,7 @@ export default function CheckoutPage({params}: { params: Promise<{ id: string }>
     const [countdown, setCountdown] = useState(30);
 
     const [cartItems, setCartItems] = useState<Product[]>([]); // current state of the component i.e. current cart items and changes in the cart items; default null
-    const [email, setEmail] = useState('jahidapon@gmail.com');
+    const [email, setEmail] = useState('');
     const [paymentMethod, setPaymentMethod] = useState('');
 
     // For D3 Mapping
@@ -324,7 +324,7 @@ export default function CheckoutPage({params}: { params: Promise<{ id: string }>
                 <div>
                     <h2 className="text-2xl font-semibold mb-4">Order Summary</h2>
                     {groupedCartItems.map((item, index) => (
-                        <div key={`${item.id}-${index}`} className="flex justify-between items-center mb-2">
+                        <div key={`${item.id}-${index}`} className="flex justify-between items-center mb-2 cart-item">
                             <span>{item.name} ({item.quantity}x)</span>
                             <span>${(item.price * item.quantity).toFixed(2)}</span>
                         </div>
@@ -345,6 +345,7 @@ export default function CheckoutPage({params}: { params: Promise<{ id: string }>
                             <input
                                 type="email"
                                 id="email"
+                                name="email"
                                 value={email}
                                 onChange={(event) => setEmail(event.target.value)}
                                 required
@@ -355,6 +356,7 @@ export default function CheckoutPage({params}: { params: Promise<{ id: string }>
                             <label htmlFor="payment" className="block mb-1">Payment Method</label>
                             <select
                                 id="payment"
+                                name="payment"
                                 value={paymentMethod}
                                 onChange={(event) => setPaymentMethod(event.target.value)}
                                 required

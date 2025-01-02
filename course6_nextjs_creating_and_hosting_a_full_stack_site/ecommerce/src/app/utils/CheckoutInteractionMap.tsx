@@ -115,7 +115,7 @@ const CheckoutInteractionMap: React.FC<CheckoutInteractionMapProps> = ({ data })
     }, [data, dimensions]);
 
     return (
-        <div ref={containerRef} style={{ width: '100%', height: '400px' }}>
+        <div ref={containerRef} style={{ width: '100%', height: '900px' }}>
             <svg ref={svgRef}></svg>
         </div>
     );
